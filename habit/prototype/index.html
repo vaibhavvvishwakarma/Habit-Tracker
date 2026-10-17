@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stride – habit tracker prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--out:#E4E7F1;--bg:#F2F4F9;--card:#fff;--ink:#14182B;--mute:#6B7189;--line:#E3E6F0;--acc:#4B3FE0;--acc-s:#E9E7FC;--on-acc:#fff;--ok:#14A36F;--flame:#F29A1F;--cell:#E8EAF3;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--out:#080A14;--bg:#0F1220;--card:#1A1E33;--ink:#EEF0FA;--mute:#9097B5;--line:#2A2F4A;--acc:#8A80FF;--acc-s:#2A2756;--on-acc:#0F1220;--ok:#35D399;--cell:#262B45}}
+:root[data-theme="dark"]{--out:#080A14;--bg:#0F1220;--card:#1A1E33;--ink:#EEF0FA;--mute:#9097B5;--line:#2A2F4A;--acc:#8A80FF;--acc-s:#2A2756;--on-acc:#0F1220;--ok:#35D399;--cell:#262B45}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{background:var(--out);font-family:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--ink);display:flex;align-items:center;justify-content:center}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+button:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.phone{width:390px;height:min(844px,100%);background:var(--bg);border-radius:36px;overflow:hidden;display:flex;flex-direction:column;position:relative;box-shadow:0 20px 60px rgba(10,14,40,.25)}
+@media (max-width:430px){.phone{width:100%;height:100%;border-radius:0;box-shadow:none}}
+#view{flex:1;overflow-y:auto;padding:20px 20px 110px}
+h1{font-size:28px;line-height:1.15;margin:0;font-weight:800;letter-spacing:-.02em}
+h2{font-size:20px;margin:0;font-weight:700}
+.mute{color:var(--mute);font-size:13px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.back{width:40px;height:40px;border-radius:12px;background:var(--card);border:1px solid var(--line);font-size:18px}
+.week{display:flex;gap:8px;margin:18px 0}
+.day{flex:1;text-align:center;padding:8px 0;border-radius:14px;font-size:13px;color:var(--mute)}
+.day b{display:block;font-size:16px;color:var(--ink);margin-top:2px}
+.day.now{background:var(--acc);color:var(--on-acc)}.day.now b{color:var(--on-acc)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+.prog{display:flex;gap:16px;align-items:center;margin-bottom:22px}
+.prog p{margin:0}.prog .big{font-size:20px;font-weight:700}
+.ring{flex:none}.ring circle{fill:none;stroke-width:9}
+.ring .bg{stroke:var(--cell)}.ring .fg{stroke:var(--acc);stroke-linecap:round;transition:stroke-dashoffset .5s cubic-bezier(.3,.8,.3,1),stroke .3s}
+.ring.full .fg{stroke:var(--ok)}
+.row{display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:10px;background:var(--card);border:1px solid var(--line);border-radius:16px}
+.tile{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:22px;flex:none}
+.mid{flex:1;text-align:left;min-width:0}
+.mid b{display:block;font-size:16px;font-weight:600}
+.row.done .mid b{color:var(--mute);text-decoration:line-through}
+.chk{width:44px;height:44px;display:grid;place-items:center;flex:none}
+.chk i{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;color:transparent;font-style:normal;font-weight:800;transition:background .2s,border-color .2s}
+.row.done .chk i{background:var(--ok);border-color:var(--ok);color:#fff;animation:pop .28s}
+@keyframes pop{50%{transform:scale(1.25)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.fab{position:absolute;right:20px;bottom:96px;width:56px;height:56px;border-radius:18px;background:var(--acc);color:var(--on-acc);font-size:28px;box-shadow:0 8px 20px rgba(75,63,224,.35)}
+.tabs{position:absolute;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding:8px 12px calc(10px + env(safe-area-inset-bottom,0px))}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;font-weight:600;color:var(--mute);padding:6px;min-height:48px}
+.tab.on{color:var(--acc)}.tab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.empty{text-align:center;padding:40px 20px}.empty .tile{margin:0 auto 12px;background:var(--acc-s);width:64px;height:64px;font-size:30px}
+.btn{width:100%;height:52px;border-radius:12px;background:var(--acc);color:var(--on-acc);font-weight:700;font-size:16px}
+.btn.ghost{background:var(--acc-s);color:var(--acc);margin-top:10px}
+label.f{display:block;font-size:13px;font-weight:600;color:var(--mute);margin:20px 0 8px}
+input[type=text],input[type=time]{width:100%;height:52px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:0 14px;font:inherit;font-size:16px}
+.opts{display:flex;gap:8px;flex-wrap:wrap}
+.opt{min-width:44px;height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:18px}
+.opt.sel{border-color:var(--acc);background:var(--acc-s);box-shadow:inset 0 0 0 1px var(--acc)}
+.opt.chip{font-size:14px;font-weight:600}
+.sw{width:44px;height:44px;border-radius:50%;border:3px solid var(--card);box-shadow:0 0 0 1px var(--line)}
+.sw.sel{box-shadow:0 0 0 2px var(--ink)}
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}
+.stats3 .card{padding:12px;text-align:center}.stats3 b{display:block;font-size:22px;font-weight:800}
+.heat{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:12px}
+.heat i{aspect-ratio:1;border-radius:7px;background:var(--cell)}
+.bars{display:flex;align-items:flex-end;gap:10px;height:140px;margin-top:14px}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px;font-size:12px;color:var(--mute)}
+.bar i{width:100%;border-radius:8px;background:var(--acc-s);min-height:6px;transition:height .4s}
+.bar.now i{background:var(--acc)}
+.setrow{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line);font-weight:600}
+.setrow:last-child{border:0}
+.tg{width:50px;height:30px;border-radius:15px;background:var(--cell);position:relative;transition:background .2s}
+.tg::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .2s}
+.tg.on{background:var(--acc)}.tg.on::after{transform:translateX(20px)}
+.av{width:72px;height:72px;border-radius:50%;background:var(--acc-s);display:grid;place-items:center;font-size:32px;margin:6px auto 10px}
+.toast{position:absolute;left:50%;bottom:100px;transform:translate(-50%,20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div id="view"></div>
+  <nav class="tabs" id="tabs" aria-label="Main">
+    <button class="tab" data-a="go" data-s="today"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>Today</button>
+    <button class="tab" data-a="go" data-s="stats"><svg viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Stats</button>
+    <button class="tab" data-a="go" data-s="profile"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Profile</button>
+  </nav>
+  <div class="toast" id="toast" role="status"></div>
+</div>
+<script>
+const COLORS=['#4B3FE0','#14A36F','#F29A1F','#E5484D','#0EA5C6'];
+const EMOJI=['💧','📖','🏃','🧘','🥗','😴','✍️','🎸'];
+const FREQ=['Every day','Weekdays','Weekends'];
+function seed(n){let x=n*9301+49297;return()=>{x=(x*9301+49297)%233280;return x/233280}}
+function mk(id,name,emoji,color,streak,best,p,done){const r=seed(id);const hist=Array.from({length:34},()=>r()<p);hist.push(done);return{id,name,emoji,color,freq:FREQ[0],time:'',streak,best,hist,done}}
+const S={screen:'today',notif:true,dark:matchMedia('(prefers-color-scheme: dark)').matches,
+habits:[mk(1,'Drink 2L of water','💧',COLORS[4],12,21,.85,true),mk(2,'Read 20 pages','📖',COLORS[0],5,14,.7,true),mk(3,'Morning run','🏃',COLORS[3],3,9,.55,false),mk(4,'Meditate 10 min','🧘',COLORS[1],8,16,.75,false),mk(5,'Lights out by 11','😴',COLORS[2],2,7,.5,false)],
+next:6,draft:null,openId:null};
+const newDraft=()=>({name:'',emoji:EMOJI[0],color:COLORS[0],freq:FREQ[0],time:'08:00'});
+const $=s=>document.querySelector(s);
+const rate=h=>Math.round(h.hist.filter(Boolean).length/h.hist.length*100);
+const ring=(pct,size=84)=>{const r=34,c=2*Math.PI*r;return `<svg class="ring ${pct>=1?'full':''}" width="${size}" height="${size}" viewBox="0 0 84 84" role="img" aria-label="${Math.round(pct*100)} percent complete"><circle class="bg" cx="42" cy="42" r="${r}"/><circle class="fg" cx="42" cy="42" r="${r}" stroke-dasharray="${c}" stroke-dashoffset="${c*(1-pct)}" transform="rotate(-90 42 42)"/></svg>`};
+const tint=c=>c+'26';
+const V={
+today(){const hs=S.habits,n=hs.length,d=hs.filter(h=>h.done).length,all=n>0&&d===n;
+const now=new Date(),mon=new Date(now);mon.setDate(now.getDate()-((now.getDay()+6)%7));
+const week=Array.from({length:7},(_,i)=>{const x=new Date(mon);x.setDate(mon.getDate()+i);return `<div class="day ${x.toDateString()===now.toDateString()?'now':''}">${x.toLocaleDateString('en',{weekday:'narrow'})}<b>${x.getDate()}</b></div>`}).join('');
+const hr=now.getHours(),greet=hr<12?'Good morning':hr<18?'Good afternoon':'Good evening';
+const rows=hs.map(h=>`<div class="row ${h.done?'done':''}"><button class="tile" style="background:${tint(h.color)}" data-a="open" data-id="${h.id}" aria-label="Open ${h.name}">${h.emoji}</button><button class="mid" data-a="open" data-id="${h.id}"><b>${h.name}</b><span class="mute">🔥 ${h.streak} day streak</span></button><button class="chk" data-a="tog" data-id="${h.id}" aria-pressed="${h.done}" aria-label="Mark ${h.name} done"><i>✓</i></button></div>`).join('');
+return `<div class="top"><div><span class="mute">${greet}</span><h1>Today</h1></div></div>
+<div class="week">${week}</div>
+${n?`<div class="card prog">${ring(d/n)}<div><p class="big">${all?'All done today':d+' of '+n+' done'}</p><p class="mute">${all?'Nice work. See you tomorrow.':(n-d)+' left. Keep your streaks going.'}</p></div></div>${rows}`
+:`<div class="empty"><div class="tile">🌱</div><h2>No habits yet</h2><p class="mute">Add one small habit to start your first streak.</p><br><button class="btn" data-a="add">Add a habit</button></div>`}
+<button class="fab" data-a="add" aria-label="Add habit">+</button>`},
+add(){const d=S.draft;
+return `<div class="top"><button class="back" data-a="go" data-s="today" aria-label="Close">✕</button><h2>New habit</h2><span style="width:40px"></span></div>
+<label class="f" for="nm">Name</label><input type="text" id="nm" placeholder="e.g. Stretch for 5 minutes" value="${d.name}" maxlength="32">
+<label class="f">Icon</label><div class="opts">${EMOJI.map(e=>`<button class="opt ${d.emoji===e?'sel':''}" data-a="pick" data-k="emoji" data-v="${e}">${e}</button>`).join('')}</div>
+<label class="f">Color</label><div class="opts">${COLORS.map(c=>`<button class="sw ${d.color===c?'sel':''}" style="background:${c}" data-a="pick" data-k="color" data-v="${c}" aria-label="Color ${c}"></button>`).join('')}</div>
+<label class="f">Repeat</label><div class="opts">${FREQ.map(f=>`<button class="opt chip ${d.freq===f?'sel':''}" data-a="pick" data-k="freq" data-v="${f}">${f}</button>`).join('')}</div>
+<label class="f" for="tm">Reminder</label><input type="time" id="tm" value="${d.time}">
+<div style="height:28px"></div><button class="btn" data-a="save">Save habit</button>`},
+detail(){const h=S.habits.find(x=>x.id===S.openId);if(!h)return V.today();
+return `<div class="top"><button class="back" data-a="go" data-s="today" aria-label="Back">‹</button><span class="mute">${h.freq}</span><button class="back" data-a="del" data-id="${h.id}" aria-label="Delete habit">🗑</button></div>
+<div style="display:flex;gap:14px;align-items:center"><div class="tile" style="background:${tint(h.color)};width:56px;height:56px;font-size:28px">${h.emoji}</div><h1 style="font-size:24px">${h.name}</h1></div>
+<div class="stats3"><div class="card"><b>🔥 ${h.streak}</b><span class="mute">Current</span></div><div class="card"><b>${Math.max(h.best,h.streak)}</b><span class="mute">Best</span></div><div class="card"><b>${rate(h)}%</b><span class="mute">Last 5 weeks</span></div></div>
+<div class="card"><h2 style="font-size:16px">Last 5 weeks</h2><div class="heat">${h.hist.map(v=>`<i style="${v?'background:'+h.color:''}"></i>`).join('')}</div></div>
+<button class="btn ghost" data-a="tog" data-id="${h.id}">${h.done?'Undo today':'Mark done today'}</button>`},
+stats(){const hs=S.habits,n=hs.length||1,today=Math.round(hs.filter(h=>h.done).length/n*100),vals=[60,80,100,40,80,100,today];
+const lab=vals.map((_,i)=>new Date(Date.now()-(6-i)*864e5).toLocaleDateString('en',{weekday:'narrow'}));
+const avg=hs.length?Math.round(hs.reduce((a,h)=>a+rate(h),0)/hs.length):0,best=[...hs].sort((a,b)=>rate(b)-rate(a))[0];
+return `<div class="top"><h1>Stats</h1></div>
+<div class="card"><h2 style="font-size:16px">This week</h2><div class="bars">${vals.map((v,i)=>`<div class="bar ${i===6?'now':''}">${v}%<i style="height:${v}%"></i>${lab[i]}</div>`).join('')}</div></div>
+<div class="stats3" style="grid-template-columns:1fr 1fr"><div class="card"><b>${avg}%</b><span class="mute">Overall completion</span></div><div class="card"><b>${best?best.emoji:'–'}</b><span class="mute">${best?'Best: '+best.name:'No habits yet'}</span></div></div>`},
+profile(){return `<div class="top"><h1>Profile</h1></div><div class="av">🙂</div><h2 style="text-align:center">Your account</h2><p class="mute" style="text-align:center;margin:4px 0 22px">${S.habits.length} habits tracked</p>
+<div class="card"><div class="setrow">Dark theme<button class="tg ${S.dark?'on':''}" data-a="theme" role="switch" aria-checked="${S.dark}" aria-label="Dark theme"></button></div>
+<div class="setrow">Daily reminders<button class="tg ${S.notif?'on':''}" data-a="notif" role="switch" aria-checked="${S.notif}" aria-label="Daily reminders"></button></div>
+<div class="setrow">Account<span class="mute">Sign in ›</span></div></div>`}
+};
+function render(reset){const v=$('#view'),top=v.scrollTop;v.innerHTML=V[S.screen]();v.scrollTop=reset?0:top;
+const main=['today','stats','profile'].includes(S.screen);$('#tabs').style.display=main?'flex':'none';
+document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.s===S.screen))}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),1800)}
+function go(s,id){S.screen=s;if(id)S.openId=id;render(true)}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,id=+t.dataset.id;
+if(a==='go')go(t.dataset.s);
+else if(a==='open')go('detail',id);
+else if(a==='tog'){const h=S.habits.find(x=>x.id===id);h.done=!h.done;h.streak+=h.done?1:-1;h.hist[h.hist.length-1]=h.done;render();if(S.habits.every(x=>x.done))toast('All habits done 🎉')}
+else if(a==='add'){S.draft=newDraft();go('add')}
+else if(a==='pick'){S.draft[t.dataset.k]=t.dataset.v;render()}
+else if(a==='save'){const d=S.draft,nm=$('#nm').value.trim();if(!nm){toast('Give your habit a name');$('#nm').focus();return}
+S.habits.push({...mk(S.next++,nm,d.emoji,d.color,0,0,0,false),freq:d.freq,time:d.time,hist:Array(35).fill(false)});go('today');toast('Habit saved')}
+else if(a==='del'){S.habits=S.habits.filter(x=>x.id!==id);go('today');toast('Habit deleted')}
+else if(a==='theme'){S.dark=!S.dark;document.documentElement.dataset.theme=S.dark?'dark':'light';render()}
+else if(a==='notif'){S.notif=!S.notif;render()}});
+document.addEventListener('input',e=>{if(!S.draft)return;if(e.target.id==='nm')S.draft.name=e.target.value;if(e.target.id==='tm')S.draft.time=e.target.value});
+render(true);
+</script>
+</body>
+</html>
